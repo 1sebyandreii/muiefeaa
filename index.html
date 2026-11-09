@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Grile facultate</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1B2559">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Grile">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" type="image/png" href="icon-192.png">
+
+  <!-- Tailwind prin CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Fonturi -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- KaTeX: afișează formulele $...$ din econometrie -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Bricolage Grotesque"', 'system-ui', 'sans-serif'],
+            sans: ['Figtree', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            paper: '#F4F6FB',   // fundal
+            ink: '#1B2559',     // text și accent principal
+            marker: '#FFD84D',  // evidențiere (stil text marcat)
+            line: '#D8DDEB',    // borduri
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    html, body { height: 100%; }
+    body {
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    /* Focus vizibil pentru tastatură */
+    button:focus-visible { outline: 3px solid #1B2559; outline-offset: 2px; }
+  </style>
+</head>
+
+<body class="bg-paper text-ink font-sans antialiased">
+  <div class="mx-auto flex min-h-full max-w-md flex-col px-5">
+
+    <!-- ============ 1. MENIUL PRINCIPAL ============ -->
+    <main id="screen-menu" class="flex flex-1 flex-col py-8">
+      <header class="mb-8">
+        <h1 class="font-display text-4xl font-extrabold leading-tight">
+          Grile pentru <span class="bg-marker px-1">examen</span>
+        </h1>
+        <p class="mt-3 text-base text-ink/70">Alege materia și începe testul.</p>
+      </header>
+
+      <nav class="flex flex-1 flex-col gap-4" aria-label="Materii">
+        <button type="button" data-subject="Econometrie"
+          class="subject-btn flex w-full items-center justify-between rounded-2xl border-2 border-ink bg-white px-6 py-7 text-left shadow-[4px_4px_0_0_#1B2559] active:translate-x-1 active:translate-y-1 active:shadow-none">
+          <span>
+            <span class="block font-display text-2xl font-bold">Econometrie</span>
+            <span class="count mt-1 block text-sm text-ink/60">… întrebări</span>
+          </span>
+          <span class="text-3xl" aria-hidden="true">∑</span>
+        </button>
+
+        <button type="button" data-subject="Marketing"
+          class="subject-btn flex w-full items-center justify-between rounded-2xl border-2 border-ink bg-white px-6 py-7 text-left shadow-[4px_4px_0_0_#1B2559] active:translate-x-1 active:translate-y-1 active:shadow-none">
+          <span>
+            <span class="block font-display text-2xl font-bold">Marketing</span>
+            <span class="count mt-1 block text-sm text-ink/60">… întrebări</span>
+          </span>
+          <span class="text-3xl" aria-hidden="true">%</span>
+        </button>
+
+        <button type="button" data-subject="Finanțe"
+          class="subject-btn flex w-full items-center justify-between rounded-2xl border-2 border-ink bg-white px-6 py-7 text-left shadow-[4px_4px_0_0_#1B2559] active:translate-x-1 active:translate-y-1 active:shadow-none">
+          <span>
+            <span class="block font-display text-2xl font-bold">Finanțe</span>
+            <span class="count mt-1 block text-sm text-ink/60">… întrebări</span>
+          </span>
+          <span class="text-3xl" aria-hidden="true">€</span>
+        </button>
+      </nav>
+    </main>
+
+    <!-- ============ 2. INTERFAȚA DE TESTARE ============ -->
+    <section id="screen-quiz" class="hidden flex-1 flex-col py-6">
+
+      <!-- Bara de sus -->
+      <div class="mb-6 flex items-center gap-3">
+        <button id="btn-back" type="button"
+          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-ink bg-white text-xl"
+          aria-label="Înapoi la materii">←</button>
+        <div class="min-w-0 flex-1">
+          <p id="quiz-subject" class="truncate font-display text-lg font-bold">Materie</p>
+          <p class="text-sm text-ink/60">
+            Întrebarea <span id="quiz-current">1</span> din <span id="quiz-total">1</span> · Runda <span id="quiz-round">1</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Progres -->
+      <div class="mb-6 h-2 w-full overflow-hidden rounded-full bg-line" role="progressbar"
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div id="quiz-progress" class="h-full w-0 rounded-full bg-ink"></div>
+      </div>
+
+      <!-- Întrebarea -->
+      <h2 id="quiz-question" class="mb-6 font-display text-xl font-bold leading-snug"></h2>
+
+      <!-- Variantele -->
+      <div id="quiz-options" class="flex flex-col gap-3">
+      </div>
+
+      <!-- Buton pentru pasul următor -->
+      <div class="mt-auto pt-8">
+        <button id="btn-next" type="button" disabled
+          class="w-full rounded-2xl bg-ink px-6 py-4 font-display text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-40">
+          Următoarea întrebare
+        </button>
+      </div>
+    </section>
+
+  </div>
+
+  <script defer src="script.js"></script>
+  <script>
+    // Înregistrează Service Worker-ul (funcționează pe HTTPS sau localhost)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+    }
+  </script>
+</body>
+</html>
